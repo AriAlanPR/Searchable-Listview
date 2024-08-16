@@ -27,7 +27,11 @@ class MyApp extends StatelessWidget {
 }
 
 class ExampleApp extends StatefulWidget {
-  const ExampleApp({Key? key}) : super(key: key);
+  final bool trySearchPager;
+  const ExampleApp({
+    Key? key, 
+    this.trySearchPager = true,
+  }) : super(key: key);
 
   @override
   State<ExampleApp> createState() => _ExampleAppState();
@@ -64,11 +68,11 @@ class _ExampleAppState extends State<ExampleApp> {
       width: double.infinity,
       child: Column(
         children: [
-          const Text('Searchable Vertical Pager list'),
+          const Text('Searchable list with divider'),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(15),
-              child: pagerSearchableList(),
+              child: widget.trySearchPager ? _searchablePager() : expansionSearchableList(),
             ),
           ),
           // Align(
@@ -77,7 +81,7 @@ class _ExampleAppState extends State<ExampleApp> {
           //     onPressed: addActor,
           //     child: const Text('Add actor'),
           //   ),
-          // ),
+          // )
         ],
       ),
     );
@@ -262,41 +266,81 @@ class _ExampleAppState extends State<ExampleApp> {
     );
   }
 
-  Widget pagerSearchableList() {
-    return SearchablePager<Map<String, List<Actor>>>(
-      initialList: [mapOfActors],
-      filter: (p0) {
-        final filteredMap = {
-          for (final entry in mapOfActors.entries)
-            entry.key: (mapOfActors[entry.key] ?? [])
-                .where((element) => element.name.contains(p0))
-                .toList()
-        };
-        return [filteredMap];
+  Widget _searchablePager() {
+    const List<Map<String, dynamic>> feedData = [
+      {
+      "age": 47, 
+      "name": 'Leonardo', 
+      "lastName": 'DiCaprio',
       },
-      style: const TextStyle(fontSize: 25),
-      itemBuilder: (_actor) {
-        final List<String> keys = _actor.keys.toList();
-        try {
-          return ActorItem(
-            actor: _actor[keys.first]!.first,
-          );
-        } catch (e) {
-          return ActorItem(
-            actor: Actor(age: 1111, name: 'Test', lastName: 'Actor'),
-          );
-        }
+      {
+      "age": 48,
+      "name": 'Kate', 
+      "lastName": 'Winslet',
       },
-      emptyWidget: const EmptyView(),
-      inputDecoration: InputDecoration(
-        labelText: "Search Actor",
-        fillColor: Colors.white,
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(
-            color: Colors.blue,
-            width: 1.0,
+      {
+      "age": 47, 
+      "name": 'Brad', 
+      "lastName": 'Pitt',
+      },
+      {
+      "age": 47,
+      "name": 'Angelina', 
+      "lastName": 'Jolie',
+      },
+      {
+      "age": 47, 
+      "name": 'Tom', 
+      "lastName": 'Hanks',
+      },
+      {
+      "age": 47, 
+      "name": 'Will', 
+      "lastName": 'Smith',
+      },
+      {
+      "age": 47, 
+      "name": 'George', 
+      "lastName": 'Clooney',
+      },
+    ];
+
+    final feedDataTitles = feedData
+        .map((e) => "${e['name']} ${e['lastName']}")
+        .toList();
+
+    return SearchablePager(
+      headerList: feedDataTitles,
+      initialList: feedData,
+      itemBuilder: (item) {
+        return ActorCard(
+          data: item,
+        );
+      },
+    );
+  }
+}
+
+class ActorCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+  const ActorCard({
+    Key? key,
+    required this.data,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Flexible(
+          child: Column(
+            children: [
+              Text('Name: ${data['name']}'),
+              Text('Lastname: ${data['lastName']}'),
+              Text('Age: ${data['age']}'),
+            ],
           ),
-          borderRadius: BorderRadius.circular(10.0),
         ),
       ),
     );

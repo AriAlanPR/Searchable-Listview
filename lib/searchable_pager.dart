@@ -39,25 +39,25 @@ class PagerLoading extends StatelessWidget {
   }
 }
 
-class SearchablePager<T> extends StatefulWidget {
+class SearchablePager extends StatefulWidget {
   /// Initial list of all elements that will be displayed.
   ///to filter the [initialList] you need provide [filter] callback
-  late List<T> initialList;
+  late List<Map<String, dynamic>> initialList;
 
   /// Callback to filter the list based on the given search value.
   /// Invoked on changing the text field search if ```searchType == SEARCH_TYPE.onEdit```
   /// or invoked when submiting the text field if ```searchType == SEARCH_TYPE.onSubmit```.
   /// You should return a list of filtered elements.
-  List<T> Function(String query)? filter;
+  List<Map<String, dynamic>> Function(String query)? filter;
 
   ///Async callback that return list to be displayed with future builder
   ///to filter the [asyncListCallback] result you need provide [asyncListFilter]
-  Future<List<T>?> Function()? asyncListCallback;
+  Future<List<Map<String, dynamic>>?> Function()? asyncListCallback;
 
   ///Callback invoked when filtring the searchable list
   ///used when providing [asyncListCallback]
   ///can't be null when [asyncListCallback] isn't null
-  late List<T> Function(String, List<T>)? asyncListFilter;
+  late List<Map<String, dynamic>> Function(String, List<Map<String, dynamic>>)? asyncListFilter;
 
   ///Loading widget displayed when [asyncListCallback] is loading
   ///if nothing is provided in [loadingWidget] searchable list will display a [CircularProgressIndicator]
@@ -69,14 +69,7 @@ class SearchablePager<T> extends StatefulWidget {
 
   /// Builder function that generates the ListView items
   /// based on the returned <T> type item
-  late Widget Function(T item)? itemBuilder;
-
-  /// Builder function that generates the Expansion listView items
-  /// [expansionGroupIndex] : expansion group index
-  /// [listItem] the current item model that will be rendered.
-  /// Used only for expansion list constructor
-  late Widget Function(int expansionGroupIndex, T listItem)?
-      expansionListBuilder;
+  late Widget Function(Map<String, dynamic> item)? itemBuilder;
 
   /// The widget to be displayed when the filter returns an empty list.
   /// Defaults to `const SizedBox.shrink()`.
@@ -121,7 +114,7 @@ class SearchablePager<T> extends StatefulWidget {
   /// Defaults to `true`.
   final bool searchFieldEnabled;
 
-  /// The focus node applied on the search text field
+  /// The focus node that applies to the search text field
   final FocusNode? focusNode;
 
   /// Indicate whether the clear and search icons will be displayed or not
@@ -184,18 +177,6 @@ class SearchablePager<T> extends StatefulWidget {
   ///by default it's null
   final Widget? secondaryWidget;
 
-  ///Map of data used to build  searchable expansion list
-  ///required when using [expansion] constructor
-  late Map<dynamic, List<T>> expansionListData;
-
-  ///callback used when filtering the expansion list
-  ///required when using [expansion] constructor
-  late Map<dynamic, List<T>> Function(String)? filterExpansionData;
-
-  ///the expansion list title widget builder
-  ///required when using [expansion] constructor
-  late Widget Function(dynamic) expansionTitleBuilder;
-
   ///physics attributes used in listview widget
   late ScrollPhysics? physics;
 
@@ -215,11 +196,9 @@ class SearchablePager<T> extends StatefulWidget {
   late bool reverse;
 
   ///Predicate callback invoked when sorting list items
-  ///required when `displaySortWidget` is True
-  late int Function(T a, T b)? sortPredicate;
+  late int Function(Map<String, dynamic> a, Map<String, dynamic> b)? sortPredicate;
 
   ///Widget displayed when sorting list
-  /// available only if `displaySortWidget` is True
   late Widget? sortWidget;
 
   ///Scroll controller passed to listview widget
@@ -231,19 +210,11 @@ class SearchablePager<T> extends StatefulWidget {
   ///by default `closeKeyboardWhenScrolling = true`
   final bool closeKeyboardWhenScrolling;
 
-  ///indicate whether the expansion will be shown or not when the expansion group is empty
-  late bool hideEmptyExpansionItems = false;
-
-  ///Indicate whether the expansion tile will be enabled or not
-  late bool expansionTileEnabled = true;
-
   /// max width of search text field
   final double? searchFieldWidth;
 
   /// height of search text field
   final double? searchFieldHeight;
-
-  bool isExpansionList = false;
 
   //Added by Awri properties and methods
   final List<String> headerList;
@@ -272,6 +243,9 @@ class SearchablePager<T> extends StatefulWidget {
     );
   }
 
+
+  ///basic filtering where it searchs for the typed text in the value of each item
+  ///the comparison converts the key value to a string lowercase to have it compared to the query as lowercase
   static List<Map<String, dynamic>> filterMapList(
     List<Map<String, dynamic>> list,
     String query,
@@ -296,6 +270,7 @@ class SearchablePager<T> extends StatefulWidget {
     }).toList();
   }
 
+  ///default predefined decoration for the search text field
   static InputDecoration baseInputDecoration({
     required String placeholder,
     Color? background,
@@ -327,6 +302,7 @@ class SearchablePager<T> extends StatefulWidget {
     Key? key,
     this.initialList = const [],
     required this.itemBuilder,
+    required this.headerList,
     this.filter,
     this.loadingWidget,
     this.errorWidget = const PagerFailure(),
@@ -368,10 +344,8 @@ class SearchablePager<T> extends StatefulWidget {
     this.displaySearchIcon = true,
     this.defaultSuffixIconColor = Colors.grey,
     this.defaultSuffixIconSize = 24,
-    this.expansionListBuilder,
     this.asyncListCallback,
     this.asyncListFilter,
-    this.headerList = const [],
   }) : super(key: key) {
     searchTextController ??= TextEditingController();
     if (sortWidget != null) {
@@ -380,18 +354,17 @@ class SearchablePager<T> extends StatefulWidget {
   }
 
   @override
-  State<SearchablePager> createState() => _SearchablePagerState<T>();
+  _SearchablePagerState<Map<String, dynamic>> createState() => _SearchablePagerState<Map<String, dynamic>>();
 }
 
-class _SearchablePagerState<T> extends State<SearchablePager<T>> {
+class _SearchablePagerState<T extends Map<String, dynamic>> extends State<SearchablePager> {
   ///create scroll controller instance
   ///attached to the listview widget
   late ScrollController scrollController =
       widget.scrollController ?? ScrollController();
   List<T> asyncListResult = [];
-  List<T> filtredAsyncListResult = [];
+  List<Map<String, dynamic>> filteredAsyncListResult = [];
   bool dataDownloaded = false;
-  List<ExpansionTileController> expansionTileControllers = [];
 
   @override
   void initState() {
@@ -431,15 +404,15 @@ class _SearchablePagerState<T> extends State<SearchablePager<T>> {
           return widget.errorWidget ?? const PagerFailure();
         }
         asyncListResult = snapshot.data as List<T>;
-        filtredAsyncListResult = asyncListResult;
+        filteredAsyncListResult = asyncListResult;
         return renderSearchableListView();
       },
     );
   }
 
   Widget renderSearchableListView() {
-    List<T> renderedList = widget.asyncListCallback != null
-        ? filtredAsyncListResult
+    List<Map<String, dynamic>> renderedList = widget.asyncListCallback != null
+        ? filteredAsyncListResult
         : widget.initialList;
     return renderListView(
       list: renderedList,
@@ -450,7 +423,7 @@ class _SearchablePagerState<T> extends State<SearchablePager<T>> {
   ///check whether the [widget.onRefresh] parameter is nullable or not
   ///the function will render a normal listview [ListView.builder]
   Widget renderListView({
-    required List<T> list,
+    required List<Map<String, dynamic>> list,
   }) {
     if (list.isEmpty) {
       return widget.emptyWidget;
@@ -459,18 +432,7 @@ class _SearchablePagerState<T> extends State<SearchablePager<T>> {
           ? RefreshIndicator(
               triggerMode: RefreshIndicatorTriggerMode.onEdge,
               onRefresh: widget.onRefresh!,
-              child: ListView.builder(
-                physics: widget.physics,
-                shrinkWrap: widget.shrinkWrap,
-                itemExtent: widget.itemExtent,
-                padding: widget.listViewPadding,
-                reverse: widget.reverse,
-                controller: scrollController,
-                scrollDirection: widget.scrollDirection,
-                itemCount: list.length,
-                itemBuilder: (context, index) =>
-                    widget.itemBuilder!(list[index]),
-              ),
+              child: verticalPager(list: list),
             )
           : verticalPager(list: list);
     }
@@ -490,17 +452,15 @@ class _SearchablePagerState<T> extends State<SearchablePager<T>> {
     );
   }
 
-  Widget verticalPager({required List<T> list}) {
+  Widget verticalPager({required List<Map<String, dynamic>> list}) {
     return VerticalCardPager(
       titles: widget.headerList,
-      images: list
-          .map(
-            (e) => Hero(
-              tag: e.hashCode,
-              child: widget.itemBuilder?.call(e) ?? Text(e.toString()),
-            ),
-          )
-          .toList(),
+      images: list.map(
+        (e) => Hero(
+          tag: e.hashCode,
+          child: widget.itemBuilder?.call(e) ?? Text(e.toString()),
+        ),
+      ).toList(),
       // onPageChanged: (page) {},
       // onSelectedItem: (index) {
       //   Navigator.push(
@@ -516,18 +476,9 @@ class _SearchablePagerState<T> extends State<SearchablePager<T>> {
   }
 
   void filterList(String value) {
-    if (widget.isExpansionList) {
+    if (widget.asyncListCallback != null) {
       setState(() {
-        widget.expansionListData =
-            widget.filterExpansionData?.call(value) ?? {};
-      });
-      expansionTileControllers.every((controller) {
-        controller.expand();
-        return true;
-      });
-    } else if (widget.asyncListCallback != null) {
-      setState(() {
-        filtredAsyncListResult = widget.asyncListFilter!(
+        filteredAsyncListResult = widget.asyncListFilter!(
           value,
           asyncListResult,
         );
@@ -542,7 +493,7 @@ class _SearchablePagerState<T> extends State<SearchablePager<T>> {
   void sortList() {
     if (widget.asyncListCallback != null) {
       setState(() {
-        filtredAsyncListResult.sort(widget.sortPredicate);
+        filteredAsyncListResult.sort(widget.sortPredicate);
       });
     } else {
       setState(() {
