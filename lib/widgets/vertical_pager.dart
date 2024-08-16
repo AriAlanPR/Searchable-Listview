@@ -1,6 +1,4 @@
 // based on code repo from https://github.com/Origogi/Vertical_Card_Pager.git
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 typedef PageChangedCallback = void Function(double? page);
@@ -229,37 +227,30 @@ class PagerCard extends StatelessWidget {
     }
 
     for (int i = 0; i < cards!.length; i++) {
-      var cardWidth = max(cardMaxWidth - 60 * (currentPostion! - i).abs(), 0.0);
-      var cardHeight = getCardHeight(i);
+      double cardWidth = MediaQuery.of(context).size.width; // Full width of the parent
+
+      // Adjust the height based on the card's position for scaling effect
+      double scaleFactor = 0.2; // Adjust to control scaling
+      double cardHeight = cardMaxHeight * (1 - (scaleFactor * (i / (cards!.length - 1))));
 
       var cardTop = getTop(cardHeight, cardViewPagerHeight, i);
+
+      // Define the desired border radius
+      double borderRadius = 15.0; // Adjust the radius as needed
 
       //NOTE - Card element design of the pager is managed here
       Widget card = Positioned.directional(
         textDirection: TextDirection.ltr,
-        top: getTop(cardHeight, cardViewPagerHeight, i), // Correct positioning
+        top: cardTop, // Correct positioning
         start: getStartPositon(cardWidth), // Correct horizontal positioning
         child: Opacity(
           opacity: getOpacity(i), // Adjust opacity
           child: SizedBox(
             width: cardWidth,
-            height: cardHeight, // Card height for center and non-center cards
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  titles![i], // Title text on top
-                  style: titleTextStyle?.copyWith(fontSize: getFontSize(i)), // Adjust font size
-                  textAlign: TextAlign.center,
-                ),
-                if (isCenterCard(i)) // Conditional rendering
-                  ...[
-                    const SizedBox(height: 8.0), // Space between title and card content
-                    Expanded(
-                      child: cards![i], // Card content below the title text
-                    ),
-                  ],
-              ],
+            height: cardHeight, // Adjust height for scaling effect
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(borderRadius),
+              child: cards![i], // Card content
             ),
           ),
         ),
@@ -378,8 +369,13 @@ class PagerCard extends StatelessWidget {
     return position;
   }
 
-  bool isCenterCard(int index) {
-    double diffAbs = (currentPostion! - index).abs();
-    return diffAbs < 0.5; // Adjust this threshold if needed
+  double getScaleFactor(int index) {
+    // Example scale factor logic
+    // Adjust the scale factor based on your requirements
+    if (index == 0) {
+      return 1.0; // No scaling for the first card
+    } else {
+      return 0.8; // Scale down for other cards
+    }
   }
 }
