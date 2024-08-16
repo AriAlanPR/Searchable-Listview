@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:searchable_listview/searchable_listview.dart';
+import 'package:searchable_listview/searchable_pager.dart';
 
 void main() {
   runApp(const MyApp());
@@ -63,20 +64,20 @@ class _ExampleAppState extends State<ExampleApp> {
       width: double.infinity,
       child: Column(
         children: [
-          const Text('Searchable list with divider'),
+          const Text('Searchable Vertical Pager list'),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(15),
               child: expansionSearchableList(),
             ),
           ),
-          Align(
-            alignment: Alignment.center,
-            child: ElevatedButton(
-              onPressed: addActor,
-              child: const Text('Add actor'),
-            ),
-          )
+          // Align(
+          //   alignment: Alignment.center,
+          //   child: ElevatedButton(
+          //     onPressed: addActor,
+          //     child: const Text('Add actor'),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -246,6 +247,46 @@ class _ExampleAppState extends State<ExampleApp> {
         );
       },
       hideEmptyExpansionItems: true,
+      emptyWidget: const EmptyView(),
+      inputDecoration: InputDecoration(
+        labelText: "Search Actor",
+        fillColor: Colors.white,
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(
+            color: Colors.blue,
+            width: 1.0,
+          ),
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+      ),
+    );
+  }
+
+  Widget pagerSearchableList() {
+    return SearchablePager<Map<String, List<Actor>>>(
+      initialList: [mapOfActors],
+      filter: (p0) {
+        final filteredMap = {
+          for (final entry in mapOfActors.entries)
+            entry.key: (mapOfActors[entry.key] ?? [])
+                .where((element) => element.name.contains(p0))
+                .toList()
+        };
+        return [filteredMap];
+      },
+      style: const TextStyle(fontSize: 25),
+      itemBuilder: (_actor) {
+        final List<String> keys = _actor.keys.toList();
+        try {
+          return ActorItem(
+            actor: _actor[keys.first]!.first,
+          );
+        } catch (e) {
+          return ActorItem(
+            actor: Actor(age: 1111, name: 'Test', lastName: 'Actor'),
+          );
+        }
+      },
       emptyWidget: const EmptyView(),
       inputDecoration: InputDecoration(
         labelText: "Search Actor",
