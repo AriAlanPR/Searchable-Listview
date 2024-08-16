@@ -330,20 +330,18 @@ class ActorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Flexible(
-          child: Column(
-            children: [
-              Text('Name: ${data['name']}'),
-              Text('Lastname: ${data['lastName']}'),
-              Text('Age: ${data['age']}'),
-            ],
-          ),
-        ),
+  return Card(
+    child: Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Text('Name: ${data['name']}'),
+          Text('Lastname: ${data['lastName']}'),
+          Text('Age: ${data['age']}'),
+        ],
       ),
-    );
+    ),
+  );
   }
 }
 

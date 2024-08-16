@@ -3,7 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:searchable_listview/resources/arrays.dart';
 import 'package:searchable_listview/widgets/search_text_field.dart';
-import 'package:vertical_card_pager/vertical_card_pager.dart';
+import 'package:searchable_listview/widgets/vertical_pager.dart';
+
 
 class PagerFailure extends StatelessWidget {
   final String text;
@@ -455,7 +456,7 @@ class _SearchablePagerState<T extends Map<String, dynamic>> extends State<Search
   Widget verticalPager({required List<Map<String, dynamic>> list}) {
     return VerticalCardPager(
       titles: widget.headerList,
-      images: list.map(
+      cards: list.map(
         (e) => Hero(
           tag: e.hashCode,
           child: widget.itemBuilder?.call(e) ?? Text(e.toString()),
